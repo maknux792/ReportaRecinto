@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.example.reportarecinto.ui.theme.ReportaRecintoTheme
-import com.example.reportarecinto.vistas.inicio.PantallaInicio
+import com.example.reportarecinto.vistas.reportes.PantallaReportes
 
 class MainActivity : ComponentActivity() {
 
@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ReportaRecintoTheme {
-                PantallaInicio()
+                PantallaReportes()
             }
         }
     }
