@@ -54,4 +54,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     // Librería para convertir objetos a JSON (Almacenamiento Local)
     implementation("com.google.code.gson:gson:2.10.1")
+// Librería para cargar y mostrar imágenes (Uri/URL) en Jetpack Compose
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }
