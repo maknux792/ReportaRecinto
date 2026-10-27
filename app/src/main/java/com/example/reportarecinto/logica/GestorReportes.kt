@@ -2,6 +2,7 @@ package com.example.reportarecinto.logica
 
 import com.example.reportarecinto.datos.Reporte
 
+//gestiona reportes
 class GestorReportes {
 
     private val listaReportes = mutableListOf<Reporte>()

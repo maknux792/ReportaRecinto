@@ -1,5 +1,5 @@
 package com.example.reportarecinto.datos
-
+//guarda la info de cada tiket
 class Reporte(
     val titulo: String,
     val lugar: String,

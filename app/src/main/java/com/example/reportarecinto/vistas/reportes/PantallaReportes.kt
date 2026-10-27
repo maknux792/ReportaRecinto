@@ -1,5 +1,7 @@
 package com.example.reportarecinto.vistas.reportes
-
+//Muestra el formulario para crear un nuevo ticket
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,17 +20,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.reportarecinto.datos.Reporte
 import com.example.reportarecinto.logica.GestorReportes
-
+import androidx.compose.ui.graphics.Color
 @Composable
-fun PantallaReportes() {
+fun PantallaReportes(
+    gestor: GestorReportes
+) {
 
-    val gestor = GestorReportes()
+    val contexto = LocalContext.current
 
     var titulo by remember { mutableStateOf("") }
     var lugar by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
     var prioridad by remember { mutableStateOf("") }
-    var mensaje by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -44,7 +47,10 @@ fun PantallaReportes() {
             value = titulo,
             onValueChange = { titulo = it },
             label = { Text("Título") },
-            modifier = Modifier.fillMaxWidth()
+            textStyle = androidx.compose.ui.text.TextStyle(
+                color = Color.Black
+            ), modifier = Modifier.fillMaxWidth()
+
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -53,7 +59,9 @@ fun PantallaReportes() {
             value = lugar,
             onValueChange = { lugar = it },
             label = { Text("Lugar") },
-            modifier = Modifier.fillMaxWidth()
+            textStyle = androidx.compose.ui.text.TextStyle(
+                color = Color.Black
+            ), modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -62,7 +70,9 @@ fun PantallaReportes() {
             value = descripcion,
             onValueChange = { descripcion = it },
             label = { Text("Descripción") },
-            modifier = Modifier.fillMaxWidth()
+            textStyle = androidx.compose.ui.text.TextStyle(
+                color = Color.Black
+            ), modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -71,7 +81,9 @@ fun PantallaReportes() {
             value = prioridad,
             onValueChange = { prioridad = it },
             label = { Text("Prioridad") },
-            modifier = Modifier.fillMaxWidth()
+            textStyle = androidx.compose.ui.text.TextStyle(
+                color = Color.Black
+            ), modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -85,19 +97,31 @@ fun PantallaReportes() {
                     descripcion.isBlank() ||
                     prioridad.isBlank()
                 ) {
-                    mensaje = "Complete todos los campos"
+
+                    Toast.makeText(
+                        contexto,
+                        "Complete todos los campos",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
                 } else {
 
                     val nuevoReporte = Reporte(
                         titulo = titulo,
                         lugar = lugar,
                         descripcion = descripcion,
-                        prioridad = prioridad
+                        prioridad = prioridad,
+                        estado = "Pendiente",
+                        solucion = ""
                     )
 
                     gestor.agregarReporte(nuevoReporte)
 
-                    mensaje = "Reporte guardado correctamente"
+                    Toast.makeText(
+                        contexto,
+                        "Reporte guardado correctamente",
+                        Toast.LENGTH_SHORT
+                    ).show()
 
                     titulo = ""
                     lugar = ""
@@ -109,9 +133,5 @@ fun PantallaReportes() {
         ) {
             Text("Guardar reporte")
         }
-
-        Spacer(modifier = Modifier.height(15.dp))
-
-        Text(mensaje)
     }
 }
