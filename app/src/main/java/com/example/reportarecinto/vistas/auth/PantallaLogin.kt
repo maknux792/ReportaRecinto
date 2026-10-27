@@ -15,22 +15,25 @@ fun PantallaLogin(
     onLoginExitoso: (esAdmin: Boolean) -> Unit
 ) {
     val contexto = LocalContext.current
-    var correo by remember { mutableStateOf("") }
+    var esModoRegistro by remember { mutableStateOf(false) }
+    var usuario by remember { mutableStateOf("") }
     var clave by remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Iniciar Sesión", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            if (esModoRegistro) "Registrar Usuario" else "Iniciar Sesión",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = correo,
-            onValueChange = { correo = it },
+            value = usuario,
+            onValueChange = { usuario = it },
             label = { Text("Correo o Usuario") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -45,21 +48,29 @@ fun PantallaLogin(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
-                if (correo.isBlank() || clave.isBlank()) {
-                    Toast.makeText(contexto, "Ingrese sus credenciales", Toast.LENGTH_SHORT).show()
+                if (usuario.isBlank() || clave.isBlank()) {
+                    Toast.makeText(contexto, "Complete los datos", Toast.LENGTH_SHORT).show()
                 } else {
-                    // Si el correo contiene 'admin' inicia como Administrador
-                    val esAdmin = correo.contains("admin", ignoreCase = true)
+                    val esAdmin = usuario.contains("admin", ignoreCase = true)
+                    Toast.makeText(
+                        contexto,
+                        if (esModoRegistro) "Usuario registrado correctamente" else "Bienvenido",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     onLoginExitoso(esAdmin)
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Ingresar")
+            Text(if (esModoRegistro) "Registrarme e Ingresar" else "Ingresar")
+        }
+
+        TextButton(onClick = { esModoRegistro = !esModoRegistro }) {
+            Text(if (esModoRegistro) "¿Ya tienes cuenta? Inicia Sesión" else "¿No tienes cuenta? Regístrate aquí")
         }
     }
 }

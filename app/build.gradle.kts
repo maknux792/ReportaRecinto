@@ -52,4 +52,6 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    // Librería para convertir objetos a JSON (Almacenamiento Local)
+    implementation("com.google.code.gson:gson:2.10.1")
 }
