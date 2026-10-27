@@ -1,45 +1,55 @@
 package com.example.reportarecinto.vistas.reportes
-//Muestra el formulario para crear un nuevo ticket
+
+import android.net.Uri
 import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.reportarecinto.datos.Reporte
 import com.example.reportarecinto.logica.GestorReportes
-import androidx.compose.ui.graphics.Color
+
 @Composable
 fun PantallaReportes(
-    gestor: GestorReportes
+    gestor: GestorReportes,
+    onReporteGuardado: () -> Unit = {}
 ) {
-
     val contexto = LocalContext.current
 
     var titulo by remember { mutableStateOf("") }
+    var nombreUsuario by remember { mutableStateOf("") }
     var lugar by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
     var prioridad by remember { mutableStateOf("") }
+    var uriImagenSeleccionada by remember { mutableStateOf<Uri?>(null) }
+
+    // Launcher nativo para seleccionar una imagen desde el almacenamiento/galería del dispositivo
+    val selectorImagenLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            uriImagenSeleccionada = uri
+            Toast.makeText(contexto, "Imagen seleccionada", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp)
+            .verticalScroll(rememberScrollState())
     ) {
-
-        Text("Crear reporte")
+        Text(
+            text = "Crear reporte",
+            style = MaterialTheme.typography.headlineMedium
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -47,10 +57,18 @@ fun PantallaReportes(
             value = titulo,
             onValueChange = { titulo = it },
             label = { Text("Título") },
-            textStyle = androidx.compose.ui.text.TextStyle(
-                color = Color.Black
-            ), modifier = Modifier.fillMaxWidth()
+            textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black),
+            modifier = Modifier.fillMaxWidth()
+        )
 
+        Spacer(modifier = Modifier.height(10.dp))
+
+        OutlinedTextField(
+            value = nombreUsuario,
+            onValueChange = { nombreUsuario = it },
+            label = { Text("Nombre de quien registra") },
+            textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black),
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -59,9 +77,8 @@ fun PantallaReportes(
             value = lugar,
             onValueChange = { lugar = it },
             label = { Text("Lugar") },
-            textStyle = androidx.compose.ui.text.TextStyle(
-                color = Color.Black
-            ), modifier = Modifier.fillMaxWidth()
+            textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black),
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -70,9 +87,8 @@ fun PantallaReportes(
             value = descripcion,
             onValueChange = { descripcion = it },
             label = { Text("Descripción") },
-            textStyle = androidx.compose.ui.text.TextStyle(
-                color = Color.Black
-            ), modifier = Modifier.fillMaxWidth()
+            textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black),
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -81,37 +97,67 @@ fun PantallaReportes(
             value = prioridad,
             onValueChange = { prioridad = it },
             label = { Text("Prioridad") },
-            textStyle = androidx.compose.ui.text.TextStyle(
-                color = Color.Black
-            ), modifier = Modifier.fillMaxWidth()
+            textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black),
+            modifier = Modifier.fillMaxWidth()
         )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Botón con selector de imagen real nativo de Android
+        OutlinedButton(
+            onClick = {
+                // Abre el selector de archivos del sistema buscando imágenes
+                selectorImagenLauncher.launch("image/*")
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                if (uriImagenSeleccionada == null)
+                    "📸 Seleccionar/Adjuntar Foto"
+                else
+                    "✓ Foto Seleccionada"
+            )
+        }
+
+        if (uriImagenSeleccionada != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Archivo: ${uriImagenSeleccionada?.lastPathSegment ?: "Imagen cargada"}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(
             onClick = {
-
                 if (
                     titulo.isBlank() ||
                     lugar.isBlank() ||
                     descripcion.isBlank() ||
-                    prioridad.isBlank()
+                    nombreUsuario.isBlank()
                 ) {
-
                     Toast.makeText(
                         contexto,
-                        "Complete todos los campos",
+                        "Complete todos los campos obligatorios",
                         Toast.LENGTH_SHORT
                     ).show()
-
+                } else if (uriImagenSeleccionada == null) {
+                    Toast.makeText(
+                        contexto,
+                        "Por favor adjunte una fotografía del problema",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 } else {
-
                     val nuevoReporte = Reporte(
                         titulo = titulo,
+                        nombreUsuario = nombreUsuario,
                         lugar = lugar,
                         descripcion = descripcion,
                         prioridad = prioridad,
-                        estado = "Pendiente",
+                        fotoUri = uriImagenSeleccionada.toString(),
+                        estado = "Recibido",
                         solucion = ""
                     )
 
@@ -119,7 +165,7 @@ fun PantallaReportes(
 
                     Toast.makeText(
                         contexto,
-                        "Reporte guardado correctamente",
+                        "Reporte guardado correctamente con imagen",
                         Toast.LENGTH_SHORT
                     ).show()
 
@@ -127,6 +173,9 @@ fun PantallaReportes(
                     lugar = ""
                     descripcion = ""
                     prioridad = ""
+                    nombreUsuario = ""
+                    uriImagenSeleccionada = null
+                    onReporteGuardado()
                 }
             },
             modifier = Modifier.fillMaxWidth()
