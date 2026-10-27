@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.reportarecinto.logica.GestorReportes
+import io.coil.compose.AsyncImage
 
 @Composable
 fun PantallaAdmin(gestor: GestorReportes) {
@@ -38,6 +39,25 @@ fun PantallaAdmin(gestor: GestorReportes) {
                             Text(text = "Reportado por: ${reporte.nombreUsuario}")
                             Text(text = "Lugar: ${reporte.lugar} | Prioridad: ${reporte.prioridad}")
                             Text(text = "Estado actual: ${reporte.estado}", color = Color(0xFFD32F2F))
+                            // Muestra la foto si el reporte contiene una URI
+                            if (!reporte.fotoUri.isNullOrEmpty()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Foto adjunta:",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                
+                                AsyncImage(
+                                    model = reporte.fotoUri,
+                                    contentDescription = "Foto del reporte",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(180.dp)
+                                        .clip(RoundedCornerShape(8.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                             Spacer(modifier = Modifier.height(8.dp))
 
                             OutlinedTextField(
