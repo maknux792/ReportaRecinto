@@ -35,15 +35,22 @@ class GestorReportes(private val context: Context) {
     fun guardarCambios() {
         guardarEnAlmacenamientoLocal()
     }
+    fun cerrarSesionYBorrarTodo() {
+        // 1. Limpia la lista observable
+        _reportes.clear()
 
-    // 💾 GUARDA LA LISTA EN EL ALMACENAMIENTO INTERNO (SharedPreferences)
+        // 2. Limpia SharedPreferences
+        val prefs = context.getSharedPreferences("reportes_sp", Context.MODE_PRIVATE)
+        prefs.edit().clear().apply()
+    }
+    //  GUARDA LA LISTA EN EL ALMACENAMIENTO INTERNO (SharedPreferences)
     private fun guardarEnAlmacenamientoLocal() {
         val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val json = gson.toJson(_reportes.toList())
         sharedPreferences.edit().putString(KEY_REPORTES, json).apply()
     }
 
-    // 📂 CARGA LOS DATOS AL INICIAR LA APP
+    //  CARGA LOS DATOS AL INICIAR LA APP
     private fun cargarReportesDesdeAlmacenamiento() {
         val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val json = sharedPreferences.getString(KEY_REPORTES, null)

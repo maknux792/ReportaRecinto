@@ -31,7 +31,6 @@ fun PantallaReportes(
 
     fun calcularPrioridad(lugar: String): String {
         return when (lugar) {
-            // "Pasillos" ahora está asignado a prioridad Alta
             "Enfermería", "Sala PIE", "Sala Sensorial", "Salas de Clases", "Pasillos" -> "Alta"
             "Salas de Computación", "Centro de Innovación Escolar", "Casino" -> "Media"
             else -> "Baja"

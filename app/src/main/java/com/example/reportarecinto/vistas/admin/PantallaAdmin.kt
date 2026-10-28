@@ -5,13 +5,22 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.reportarecinto.logica.GestorReportes
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+
+
 
 @Composable
 fun PantallaAdmin(gestor: GestorReportes) {
@@ -73,7 +82,59 @@ fun PantallaAdmin(gestor: GestorReportes) {
                             )
                             Text("Estado actual: ${reporte.estado}", color = MaterialTheme.colorScheme.primary)
 
-                            // Muestra el último mensaje enviado previamente por el admin (si existe)
+                          // Inicializamos el estado para controlar la ventana flotante (ampliar foto)
+                            var mostrarImagenAmpliada by remember { mutableStateOf(false) }
+
+                          // FOTO ADJUNTA
+                            if (!reporte.fotoUri.isNullOrEmpty()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "📸 Foto adjunta (toca para ampliar):",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                AsyncImage(
+                                    model = reporte.fotoUri,
+                                    contentDescription = "Foto adjunta del reporte",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(180.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { mostrarImagenAmpliada = true }, // <--- Abre la ventana flotante
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+
+                            // VENTANA FLOTANTE PARA VER LA FOTO EN GRANDE
+                            if (mostrarImagenAmpliada && !reporte.fotoUri.isNullOrEmpty()) {
+                                AlertDialog(
+                                    onDismissRequest = { mostrarImagenAmpliada = false },
+                                    confirmButton = {
+                                        TextButton(onClick = { mostrarImagenAmpliada = false }) {
+                                            Text("Cerrar")
+                                        }
+                                    },
+                                    text = {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .wrapContentHeight()
+                                        ) {
+                                            AsyncImage(
+                                                model = reporte.fotoUri,
+                                                contentDescription = "Foto en tamaño completo",
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clip(RoundedCornerShape(12.dp)),
+                                                contentScale = ContentScale.Fit
+                                            )
+                                        }
+                                    }
+                                )
+                            }
+
+                            // Muestra el último mensaje enviado previamente por el admin
                             if (reporte.respuestaAdmin.isNotBlank()) {
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
@@ -98,7 +159,6 @@ fun PantallaAdmin(gestor: GestorReportes) {
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-// Dentro del botón "En Proceso":
                                 Button(
                                     onClick = {
                                         reporte.estado = "En Proceso"
@@ -106,14 +166,13 @@ fun PantallaAdmin(gestor: GestorReportes) {
                                             reporte.respuestaAdmin = mensajeInput
                                         }
                                         mensajeInput = ""
-                                        gestor.guardarCambios() // <--- GUARDA EL CAMBIO LOCALMENTE
+                                        gestor.guardarCambios()
                                         Toast.makeText(contexto, "Estado: En Proceso", Toast.LENGTH_SHORT).show()
                                     }
                                 ) {
                                     Text("En Proceso")
                                 }
 
-// Dentro del botón "Solucionado":
                                 Button(
                                     onClick = {
                                         reporte.estado = "Solucionado"
@@ -121,13 +180,12 @@ fun PantallaAdmin(gestor: GestorReportes) {
                                             reporte.respuestaAdmin = mensajeInput
                                         }
                                         mensajeInput = ""
-                                        gestor.guardarCambios() // <--- GUARDA EL CAMBIO LOCALMENTE
+                                        gestor.guardarCambios()
                                         Toast.makeText(contexto, "Estado: Solucionado", Toast.LENGTH_SHORT).show()
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
                                 ) {
                                     Text("Solucionado")
-                                }
                                 }
                             }
                         }
@@ -136,3 +194,4 @@ fun PantallaAdmin(gestor: GestorReportes) {
             }
         }
     }
+}

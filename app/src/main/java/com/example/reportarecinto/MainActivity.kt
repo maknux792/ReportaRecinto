@@ -1,6 +1,7 @@
 package com.example.reportarecinto
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Spacer
@@ -50,7 +51,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // 3. APLICACIÓN PRINCIPAL (3 PESTAÑAS: Mis Tickets, Crear Ticket, Panel Admin)
+                    // 3. APLICACIÓN PRINCIPAL
                     else -> {
                         ModalNavigationDrawer(
                             drawerState = drawerState,
@@ -88,10 +89,14 @@ class MainActivity : ComponentActivity() {
                                         }
                                     )
                                     Spacer(modifier = Modifier.weight(1f))
+
+                                    // CERRAR SESIÓN DESDE EL MENÚ LATERAL
                                     NavigationDrawerItem(
                                         label = { Text("🚪 Cerrar Sesión") },
                                         selected = false,
                                         onClick = {
+                                            gestor.cerrarSesionYBorrarTodo()
+                                            Toast.makeText(applicationContext, "Sesión cerrada", Toast.LENGTH_SHORT).show()
                                             sesionIniciada = false
                                             enBienvenida = true
                                             scope.launch { drawerState.close() }
@@ -113,7 +118,10 @@ class MainActivity : ComponentActivity() {
                                             }
                                         },
                                         actions = {
+                                            // CERRAR SESIÓN DESDE LA BARRA SUPERIOR
                                             TextButton(onClick = {
+                                                gestor.cerrarSesionYBorrarTodo()
+                                                Toast.makeText(applicationContext, "Sesión cerrada", Toast.LENGTH_SHORT).show()
                                                 sesionIniciada = false
                                                 enBienvenida = true
                                             }) {
