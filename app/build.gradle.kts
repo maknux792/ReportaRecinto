@@ -56,4 +56,17 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     // Librería para cargar y mostrar imágenes (Uri/URL) en Jetpack Compose
     implementation("io.coil-kt:coil-compose:2.6.0")
+    // ViewModel para Jetpack Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+
+    // Retrofit para conectar con Spring Boot y la API externa
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+    // Corrutinas para operaciones asíncronas
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+
+    // Librerías para pruebas unitarias (80% cobertura)
+    testImplementation("io.mockk:mockk:1.13.13")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
 }

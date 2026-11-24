@@ -11,13 +11,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.reportarecinto.logica.GestorReportes
+import com.example.reportarecinto.data.GestorReportes
 import com.example.reportarecinto.ui.theme.ReportaRecintoTheme
-import com.example.reportarecinto.vistas.admin.PantallaAdmin
-import com.example.reportarecinto.vistas.auth.PantallaLogin
-import com.example.reportarecinto.vistas.inicio.PantallaInicio
-import com.example.reportarecinto.vistas.reportes.ListaReportes
-import com.example.reportarecinto.vistas.reportes.PantallaReportes
+import com.example.reportarecinto.ui.admin.PantallaAdmin
+import com.example.reportarecinto.ui.auth.PantallaLogin
+import com.example.reportarecinto.ui.inicio.PantallaInicio
+import com.example.reportarecinto.ui.reportes.ListaReportes
+import com.example.reportarecinto.ui.reportes.PantallaReportes
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
