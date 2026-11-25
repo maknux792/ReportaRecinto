@@ -11,29 +11,48 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.reportarecinto.data.GestorReportes
-import com.example.reportarecinto.ui.theme.ReportaRecintoTheme
+import com.example.reportarecinto.data.ReporteDatabaseHelper
+import com.example.reportarecinto.data.ReporteRepository
 import com.example.reportarecinto.ui.admin.PantallaAdmin
 import com.example.reportarecinto.ui.auth.PantallaLogin
 import com.example.reportarecinto.ui.inicio.PantallaInicio
 import com.example.reportarecinto.ui.reportes.ListaReportes
 import com.example.reportarecinto.ui.reportes.PantallaReportes
+import com.example.reportarecinto.ui.theme.ReportaRecintoTheme
+import com.example.reportarecinto.viewmodel.ReporteViewModel
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
+    private val reporteViewModel: ReporteViewModel by lazy {
+        val dbHelper = ReporteDatabaseHelper(applicationContext)
+        val repository = ReporteRepository(dbHelper)
+        ReporteViewModel(repository)
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val gestor = GestorReportes(applicationContext)
 
         setContent {
             ReportaRecintoTheme {
                 var enBienvenida by remember { mutableStateOf(true) }
                 var sesionIniciada by remember { mutableStateOf(false) }
                 var pantallaActual by remember { mutableIntStateOf(0) }
+                var correoActual by remember { mutableStateOf("") }
+                var esAdminActual by remember { mutableStateOf(false) }
 
                 val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
+
+                fun cerrarSesion() {
+                    Toast.makeText(applicationContext, "Sesión cerrada", Toast.LENGTH_SHORT).show()
+                    correoActual = ""
+                    esAdminActual = false
+                    pantallaActual = 0
+                    sesionIniciada = false
+                    enBienvenida = true
+                }
 
                 when {
                     // 1. BIENVENIDA
@@ -44,9 +63,12 @@ class MainActivity : ComponentActivity() {
                     // 2. INICIO DE SESIÓN
                     !sesionIniciada -> {
                         PantallaLogin(
-                            onLoginExitoso = { esAdmin ->
+                            onLoginExitoso = { esAdmin, correo ->
                                 sesionIniciada = true
+                                esAdminActual = esAdmin
+                                correoActual = correo
                                 pantallaActual = if (esAdmin) 2 else 0
+                                reporteViewModel.cargarReportes()
                             }
                         )
                     }
@@ -95,11 +117,8 @@ class MainActivity : ComponentActivity() {
                                         label = { Text("🚪 Cerrar Sesión") },
                                         selected = false,
                                         onClick = {
-                                            gestor.cerrarSesionYBorrarTodo()
-                                            Toast.makeText(applicationContext, "Sesión cerrada", Toast.LENGTH_SHORT).show()
-                                            sesionIniciada = false
-                                            enBienvenida = true
                                             scope.launch { drawerState.close() }
+                                            cerrarSesion()
                                         }
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
@@ -118,13 +137,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                         },
                                         actions = {
-                                            // CERRAR SESIÓN DESDE LA BARRA SUPERIOR
-                                            TextButton(onClick = {
-                                                gestor.cerrarSesionYBorrarTodo()
-                                                Toast.makeText(applicationContext, "Sesión cerrada", Toast.LENGTH_SHORT).show()
-                                                sesionIniciada = false
-                                                enBienvenida = true
-                                            }) {
+                                            TextButton(onClick = { cerrarSesion() }) {
                                                 Text("Salir")
                                             }
                                         }
@@ -155,12 +168,16 @@ class MainActivity : ComponentActivity() {
                             ) { innerPadding ->
                                 Surface(modifier = Modifier.padding(innerPadding)) {
                                     when (pantallaActual) {
-                                        0 -> ListaReportes(gestor = gestor)
+                                        0 -> ListaReportes(
+                                            viewModel = reporteViewModel,
+                                            correoUsuarioActual = correoActual
+                                        )
                                         1 -> PantallaReportes(
-                                            gestor = gestor,
+                                            viewModel = reporteViewModel,
+                                            correoUsuarioActual = correoActual,
                                             onReporteGuardado = { pantallaActual = 0 }
                                         )
-                                        2 -> PantallaAdmin(gestor = gestor)
+                                        2 -> PantallaAdmin(viewModel = reporteViewModel)
                                     }
                                 }
                             }

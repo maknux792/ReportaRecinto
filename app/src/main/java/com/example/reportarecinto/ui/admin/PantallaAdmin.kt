@@ -2,6 +2,7 @@ package com.example.reportarecinto.ui.admin
 
 import android.widget.Toast
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,27 +16,37 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.reportarecinto.data.GestorReportes
-import androidx.compose.foundation.clickable
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
-
-
+import com.example.reportarecinto.viewmodel.ReporteViewModel
 
 @Composable
-fun PantallaAdmin(gestor: GestorReportes) {
+fun PantallaAdmin(viewModel: ReporteViewModel) {
     val contexto = LocalContext.current
-    val listaReportes = gestor.obtenerReportes()
+    val listaReportes by viewModel.reportes.collectAsState()
+    val cargando by viewModel.cargando.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.cargarReportes()
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text("Panel de Administración", style = MaterialTheme.typography.headlineMedium)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Panel de Administración", style = MaterialTheme.typography.headlineMedium)
+            TextButton(onClick = { viewModel.cargarReportes() }) {
+                Text("🔄")
+            }
+        }
         Spacer(modifier = Modifier.height(12.dp))
 
-        if (listaReportes.isEmpty()) {
+        if (cargando && listaReportes.isEmpty()) {
+            CircularProgressIndicator()
+        } else if (listaReportes.isEmpty()) {
             Text("No hay reportes registrados.")
         } else {
             LazyColumn {
@@ -43,9 +54,10 @@ fun PantallaAdmin(gestor: GestorReportes) {
                     val msTranscurridos = System.currentTimeMillis() - reporte.fechaCreacionMs
                     val diasAntiguedad = msTranscurridos / (1000 * 60 * 60 * 24)
                     val requiereAlerta10Dias = diasAntiguedad >= 10 && reporte.estado != "Solucionado"
+                    val respuestaPrevia = reporte.respuestaAdmin
 
-                    // Inicializamos en blanco para que no vuelva a cargarse al cambiar de vista
                     var mensajeInput by remember { mutableStateOf("") }
+                    var mostrarImagenAmpliada by remember { mutableStateOf(false) }
 
                     Card(
                         modifier = Modifier
@@ -80,13 +92,12 @@ fun PantallaAdmin(gestor: GestorReportes) {
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.tertiary
                             )
-                            Text("Estado actual: ${reporte.estado}", color = MaterialTheme.colorScheme.primary)
+                            Text(
+                                text = "Estado actual: ${reporte.estado}",
+                                color = MaterialTheme.colorScheme.primary
+                            )
 
-                          // Inicializamos el estado para controlar la ventana flotante (ampliar foto)
-                            var mostrarImagenAmpliada by remember { mutableStateOf(false) }
-
-                          // FOTO ADJUNTA
-                            if (!reporte.fotoUri.isNullOrEmpty()) {
+                            if (reporte.fotoUri.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = "📸 Foto adjunta (toca para ampliar):",
@@ -101,13 +112,12 @@ fun PantallaAdmin(gestor: GestorReportes) {
                                         .fillMaxWidth()
                                         .height(180.dp)
                                         .clip(RoundedCornerShape(8.dp))
-                                        .clickable { mostrarImagenAmpliada = true }, // <--- Abre la ventana flotante
+                                        .clickable { mostrarImagenAmpliada = true },
                                     contentScale = ContentScale.Crop
                                 )
                             }
 
-                            // VENTANA FLOTANTE PARA VER LA FOTO EN GRANDE
-                            if (mostrarImagenAmpliada && !reporte.fotoUri.isNullOrEmpty()) {
+                            if (mostrarImagenAmpliada && reporte.fotoUri.isNotEmpty()) {
                                 AlertDialog(
                                     onDismissRequest = { mostrarImagenAmpliada = false },
                                     confirmButton = {
@@ -134,11 +144,10 @@ fun PantallaAdmin(gestor: GestorReportes) {
                                 )
                             }
 
-                            // Muestra el último mensaje enviado previamente por el admin
-                            if (reporte.respuestaAdmin.isNotBlank()) {
+                            if (respuestaPrevia.isNotBlank()) {
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = "💬 Último mensaje enviado: ${reporte.respuestaAdmin}",
+                                    text = "💬 Último mensaje enviado: $respuestaPrevia",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color.Gray
                                 )
@@ -161,13 +170,15 @@ fun PantallaAdmin(gestor: GestorReportes) {
                             ) {
                                 Button(
                                     onClick = {
-                                        reporte.estado = "En Proceso"
-                                        if (mensajeInput.isNotBlank()) {
-                                            reporte.respuestaAdmin = mensajeInput
+                                        val nuevaRespuesta = if (mensajeInput.isNotBlank()) mensajeInput else respuestaPrevia
+                                        val reporteActualizado = reporte.copy(
+                                            estado = "En Proceso",
+                                            respuestaAdmin = nuevaRespuesta
+                                        )
+                                        viewModel.actualizarReporte(reporte.id, reporteActualizado) {
+                                            mensajeInput = ""
+                                            Toast.makeText(contexto, "Estado: En Proceso", Toast.LENGTH_SHORT).show()
                                         }
-                                        mensajeInput = ""
-                                        gestor.guardarCambios()
-                                        Toast.makeText(contexto, "Estado: En Proceso", Toast.LENGTH_SHORT).show()
                                     }
                                 ) {
                                     Text("En Proceso")
@@ -175,13 +186,16 @@ fun PantallaAdmin(gestor: GestorReportes) {
 
                                 Button(
                                     onClick = {
-                                        reporte.estado = "Solucionado"
-                                        if (mensajeInput.isNotBlank()) {
-                                            reporte.respuestaAdmin = mensajeInput
+                                        val nuevaRespuesta = if (mensajeInput.isNotBlank()) mensajeInput else respuestaPrevia
+                                        val reporteActualizado = reporte.copy(
+                                            estado = "Solucionado",
+                                            respuestaAdmin = nuevaRespuesta,
+                                            solucion = nuevaRespuesta
+                                        )
+                                        viewModel.actualizarReporte(reporte.id, reporteActualizado) {
+                                            mensajeInput = ""
+                                            Toast.makeText(contexto, "Estado: Solucionado", Toast.LENGTH_SHORT).show()
                                         }
-                                        mensajeInput = ""
-                                        gestor.guardarCambios()
-                                        Toast.makeText(contexto, "Estado: Solucionado", Toast.LENGTH_SHORT).show()
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
                                 ) {

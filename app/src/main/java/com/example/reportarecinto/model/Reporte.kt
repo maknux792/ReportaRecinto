@@ -6,6 +6,7 @@ data class Reporte(
     val id: String = UUID.randomUUID().toString(),
     val titulo: String = "",
     val nombreUsuario: String = "Anónimo",
+    val correoUsuario: String = "",
     val lugar: String = "",
     val descripcion: String = "",
     val prioridad: String = "Baja",

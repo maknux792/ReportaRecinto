@@ -10,8 +10,8 @@ class ReporteDatabaseHelper(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
-        private const val DATABASE_NAME = "reportarecinto.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_NAME = "reporta_recinto.db"
+        private const val DATABASE_VERSION = 2
         private const val TABLE_REPORTES = "reportes"
     }
 
@@ -21,6 +21,7 @@ class ReporteDatabaseHelper(context: Context) :
                 id TEXT PRIMARY KEY,
                 titulo TEXT,
                 nombreUsuario TEXT,
+                correoUsuario TEXT,
                 lugar TEXT,
                 descripcion TEXT,
                 prioridad TEXT,
@@ -29,7 +30,7 @@ class ReporteDatabaseHelper(context: Context) :
                 respuestaAdmin TEXT,
                 solucion TEXT,
                 fechaCreacionMs INTEGER,
-                sincronizado INTEGER DEFAULT 0
+                sincronizado INTEGER DEFAULT 1
             )
         """.trimIndent()
         db.execSQL(createTable)
@@ -40,12 +41,13 @@ class ReporteDatabaseHelper(context: Context) :
         onCreate(db)
     }
 
-    fun insertarOActualizarReporte(reporte: Reporte, sincronizado: Boolean = false) {
+    fun insertarOActualizarReporte(reporte: Reporte, sincronizado: Boolean = true) {
         val db = writableDatabase
         val values = ContentValues().apply {
             put("id", reporte.id)
             put("titulo", reporte.titulo)
             put("nombreUsuario", reporte.nombreUsuario)
+            put("correoUsuario", reporte.correoUsuario)
             put("lugar", reporte.lugar)
             put("descripcion", reporte.descripcion)
             put("prioridad", reporte.prioridad)
@@ -62,21 +64,28 @@ class ReporteDatabaseHelper(context: Context) :
     fun obtenerTodosLosReportes(): List<Reporte> {
         val lista = mutableListOf<Reporte>()
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM $TABLE_REPORTES ORDER BY fechaCreacionMs DESC", null)
+        val cursor = db.rawQuery(
+            "SELECT * FROM $TABLE_REPORTES ORDER BY fechaCreacionMs DESC",
+            null
+        )
         cursor.use {
             while (it.moveToNext()) {
+                val idxCorreo = it.getColumnIndex("correoUsuario")
+                val correo = if (idxCorreo >= 0) it.getString(idxCorreo).orEmpty() else ""
+
                 lista.add(
                     Reporte(
                         id = it.getString(it.getColumnIndexOrThrow("id")),
-                        titulo = it.getString(it.getColumnIndexOrThrow("titulo")),
-                        nombreUsuario = it.getString(it.getColumnIndexOrThrow("nombreUsuario")),
-                        lugar = it.getString(it.getColumnIndexOrThrow("lugar")),
-                        descripcion = it.getString(it.getColumnIndexOrThrow("descripcion")),
-                        prioridad = it.getString(it.getColumnIndexOrThrow("prioridad")),
-                        fotoUri = it.getString(it.getColumnIndexOrThrow("fotoUri")),
-                        estado = it.getString(it.getColumnIndexOrThrow("estado")),
-                        respuestaAdmin = it.getString(it.getColumnIndexOrThrow("respuestaAdmin")),
-                        solucion = it.getString(it.getColumnIndexOrThrow("solucion")),
+                        titulo = it.getString(it.getColumnIndexOrThrow("titulo")).orEmpty(),
+                        nombreUsuario = it.getString(it.getColumnIndexOrThrow("nombreUsuario")).orEmpty(),
+                        correoUsuario = correo,
+                        lugar = it.getString(it.getColumnIndexOrThrow("lugar")).orEmpty(),
+                        descripcion = it.getString(it.getColumnIndexOrThrow("descripcion")).orEmpty(),
+                        prioridad = it.getString(it.getColumnIndexOrThrow("prioridad")).orEmpty(),
+                        fotoUri = it.getString(it.getColumnIndexOrThrow("fotoUri")).orEmpty(),
+                        estado = it.getString(it.getColumnIndexOrThrow("estado")).orEmpty(),
+                        respuestaAdmin = it.getString(it.getColumnIndexOrThrow("respuestaAdmin")).orEmpty(),
+                        solucion = it.getString(it.getColumnIndexOrThrow("solucion")).orEmpty(),
                         fechaCreacionMs = it.getLong(it.getColumnIndexOrThrow("fechaCreacionMs"))
                     )
                 )
@@ -88,30 +97,33 @@ class ReporteDatabaseHelper(context: Context) :
     fun obtenerPendientesDeSincronizar(): List<Reporte> {
         val lista = mutableListOf<Reporte>()
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM $TABLE_REPORTES WHERE sincronizado = 0", null)
+        val cursor = db.rawQuery(
+            "SELECT * FROM $TABLE_REPORTES WHERE sincronizado = 0",
+            null
+        )
         cursor.use {
             while (it.moveToNext()) {
+                val idxCorreo = it.getColumnIndex("correoUsuario")
+                val correo = if (idxCorreo >= 0) it.getString(idxCorreo).orEmpty() else ""
+
                 lista.add(
                     Reporte(
                         id = it.getString(it.getColumnIndexOrThrow("id")),
-                        titulo = it.getString(it.getColumnIndexOrThrow("titulo")),
-                        nombreUsuario = it.getString(it.getColumnIndexOrThrow("nombreUsuario")),
-                        lugar = it.getString(it.getColumnIndexOrThrow("lugar")),
-                        descripcion = it.getString(it.getColumnIndexOrThrow("descripcion")),
-                        prioridad = it.getString(it.getColumnIndexOrThrow("prioridad")),
-                        fotoUri = it.getString(it.getColumnIndexOrThrow("fotoUri")),
-                        estado = it.getString(it.getColumnIndexOrThrow("estado")),
-                        respuestaAdmin = it.getString(it.getColumnIndexOrThrow("respuestaAdmin")),
-                        solucion = it.getString(it.getColumnIndexOrThrow("solucion")),
+                        titulo = it.getString(it.getColumnIndexOrThrow("titulo")).orEmpty(),
+                        nombreUsuario = it.getString(it.getColumnIndexOrThrow("nombreUsuario")).orEmpty(),
+                        correoUsuario = correo,
+                        lugar = it.getString(it.getColumnIndexOrThrow("lugar")).orEmpty(),
+                        descripcion = it.getString(it.getColumnIndexOrThrow("descripcion")).orEmpty(),
+                        prioridad = it.getString(it.getColumnIndexOrThrow("prioridad")).orEmpty(),
+                        fotoUri = it.getString(it.getColumnIndexOrThrow("fotoUri")).orEmpty(),
+                        estado = it.getString(it.getColumnIndexOrThrow("estado")).orEmpty(),
+                        respuestaAdmin = it.getString(it.getColumnIndexOrThrow("respuestaAdmin")).orEmpty(),
+                        solucion = it.getString(it.getColumnIndexOrThrow("solucion")).orEmpty(),
                         fechaCreacionMs = it.getLong(it.getColumnIndexOrThrow("fechaCreacionMs"))
                     )
                 )
             }
         }
         return lista
-    }
-
-    fun eliminarTodos() {
-        writableDatabase.execSQL("DELETE FROM $TABLE_REPORTES")
     }
 }

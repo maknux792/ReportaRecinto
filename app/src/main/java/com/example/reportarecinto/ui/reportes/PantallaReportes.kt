@@ -13,15 +13,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.reportarecinto.model.Reporte
-import com.example.reportarecinto.data.GestorReportes
+import com.example.reportarecinto.viewmodel.ReporteViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaReportes(
-    gestor: GestorReportes,
+    viewModel: ReporteViewModel,
+    correoUsuarioActual: String,
     onReporteGuardado: () -> Unit = {}
 ) {
     val contexto = LocalContext.current
+    val cargando by viewModel.cargando.collectAsState()
+    val mensajeError by viewModel.mensajeError.collectAsState()
+
+    LaunchedEffect(mensajeError) {
+        mensajeError?.let { error ->
+            Toast.makeText(contexto, error, Toast.LENGTH_LONG).show()
+        }
+    }
 
     val lugaresDisponibles = listOf(
         "Enfermería", "Sala PIE", "Sala Sensorial", "Salas de Clases", "Pasillos",
@@ -93,6 +102,7 @@ fun PantallaReportes(
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = menuLugarExpandido) },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
             )
             ExposedDropdownMenu(
                 expanded = menuLugarExpandido,
@@ -138,24 +148,26 @@ fun PantallaReportes(
                     Toast.makeText(contexto, "Debe adjuntar una foto", Toast.LENGTH_SHORT).show()
                 } else {
                     val prioridadOculta = calcularPrioridad(lugarSeleccionado)
-                    gestor.agregarReporte(
-                        Reporte(
-                            titulo = titulo,
-                            nombreUsuario = nombreUsuario,
-                            lugar = lugarSeleccionado,
-                            descripcion = descripcion,
-                            prioridad = prioridadOculta,
-                            fotoUri = uriImagenSeleccionada.toString(),
-                            estado = "Recibido"
-                        )
+                    val nuevoReporte = Reporte(
+                        titulo = titulo,
+                        nombreUsuario = nombreUsuario,
+                        correoUsuario = correoUsuarioActual,
+                        lugar = lugarSeleccionado,
+                        descripcion = descripcion,
+                        prioridad = prioridadOculta,
+                        fotoUri = uriImagenSeleccionada.toString(),
+                        estado = "Recibido"
                     )
-                    Toast.makeText(contexto, "Reporte enviado correctamente", Toast.LENGTH_SHORT).show()
-                    onReporteGuardado()
+                    viewModel.crearReporte(nuevoReporte) {
+                        Toast.makeText(contexto, "Reporte enviado al servidor", Toast.LENGTH_SHORT).show()
+                        onReporteGuardado()
+                    }
                 }
             },
+            enabled = !cargando,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Guardar reporte")
+            Text(if (cargando) "Enviando..." else "Guardar reporte")
         }
     }
 }
